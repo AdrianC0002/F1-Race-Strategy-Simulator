@@ -1,0 +1,12 @@
+{
+  "track_laps": {
+    "Bahrain": 57,
+    "Saudi": 50,
+    "Spain": 66,
+    "Monza": 53,
+    "AbuDhabi": 58
+  },
+  "driver": "NOR",
+  "team": "McLaren",
+  "pit_loss": 20.0
+}
