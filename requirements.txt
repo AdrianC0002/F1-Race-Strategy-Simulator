@@ -1,8 +1,9 @@
 --only-binary=:all:
+
 streamlit
 pandas
-numpy==1.26.4
-scikit-learn==1.4.2
+numpy
+scikit-learn
 xgboost
-joblib
 matplotlib
+joblib
