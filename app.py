@@ -3,8 +3,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import joblib
 import json
+import base64
+from pathlib import Path
 
-# Model and metadata loaded
 model = joblib.load("final_xgb_model.pkl")
 
 with open("metadata.json", "r") as f:
@@ -15,12 +16,20 @@ default_driver = metadata["driver"]
 default_team = metadata["team"]
 pit_loss = metadata["pit_loss"]
 
-# Same columns used in training
 cat_cols = ["gp", "compound", "driver", "team"]
 num_cols = ["lap_number", "stint", "tyre_life", "tyre_life_sq", "stops_so_far"]
 
+st.set_page_config(
+    page_title="F1 Race Strategy Simulator",
+    page_icon="🏎️",
+    layout="wide"
+)
 
-# Function to build race laps
+def get_base64_image(image_path):
+    image_path = Path(image_path)
+    with open(image_path, "rb") as image_file:
+        return base64.b64encode(image_file.read()).decode()
+
 def build_race_rows(gp, driver, team, total_laps, pit_laps, compounds):
     rows = []
 
@@ -53,7 +62,6 @@ def build_race_rows(gp, driver, team, total_laps, pit_laps, compounds):
     return pd.DataFrame(rows)
 
 
-# Function to simulate strategy
 def simulate_strategy(gp, driver, team, total_laps, pit_laps, compounds):
     sim_df = build_race_rows(gp, driver, team, total_laps, pit_laps, compounds)
 
@@ -64,13 +72,56 @@ def simulate_strategy(gp, driver, team, total_laps, pit_laps, compounds):
 
     return sim_df, total_time
 
+banner_image = get_base64_image("assets/f1_banner.jpg")
 
-# Streamlit page
-st.title("Formula 1 Race Strategy Simulator")
-st.write("Explore and compare Formula 1 race strategy scenarios.")
-st.write(f"Fixed driver/team: {default_driver} / {default_team}")
+st.markdown(
+    f"""
+    <style>
+    .block-container {{
+        padding-top: 0rem;
+    }}
 
-# Track selection
+    .hero-section {{
+        background-image:
+            linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.55)),
+            url("data:image/jpg;base64,{banner_image}");
+        background-size: cover;
+        background-position: center;
+        width: 100%;
+        min-height: 320px;
+        border-radius: 0px 0px 18px 18px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 50px;
+        margin-bottom: 30px;
+    }}
+
+    .hero-title {{
+        color: white;
+        font-size: 52px;
+        font-weight: 800;
+        margin-bottom: 10px;
+    }}
+
+    .hero-subtitle {{
+        color: white;
+        font-size: 20px;
+        max-width: 850px;
+    }}
+    </style>
+
+    <div class="hero-section">
+        <div class="hero-title">Formula 1 Race Strategy Simulator</div>
+        <div class="hero-subtitle">
+            Predict lap times and compare Formula 1 tyre and pit-stop strategies using machine learning.
+        </div>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
+st.info(f"Driver / Team: {default_driver} / {default_team}")
 selected_track = st.selectbox(
     "Select track",
     ["Bahrain", "Saudi", "Spain", "Monza", "AbuDhabi"]
@@ -78,7 +129,6 @@ selected_track = st.selectbox(
 
 total_laps = track_laps[selected_track]
 
-# Strategy inputs
 st.subheader("Enter strategy inputs")
 
 compound_text = st.text_input(
@@ -91,7 +141,6 @@ pit_lap_text = st.text_input(
     value="12"
 )
 
-# Button
 if st.button("Run Strategy"):
     compounds = [x.strip().upper() for x in compound_text.split(",") if x.strip()]
 
@@ -125,7 +174,6 @@ if st.button("Run Strategy"):
             use_container_width=True
         )
 
-        # Plot 1: predicted lap time
         fig1, ax1 = plt.subplots(figsize=(10, 4))
         ax1.plot(sim_df["lap_number"], sim_df["predicted_lap_time"])
         ax1.set_xlabel("Lap Number")
@@ -134,7 +182,6 @@ if st.button("Run Strategy"):
         ax1.grid(True)
         st.pyplot(fig1)
 
-        # Plot 2: cumulative time
         fig2, ax2 = plt.subplots(figsize=(10, 4))
         ax2.plot(sim_df["lap_number"], sim_df["cumulative_time"])
         ax2.set_xlabel("Lap Number")
